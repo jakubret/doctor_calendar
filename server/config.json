@@ -1,0 +1,6 @@
+{
+    "MONGO_URI": "mongodb+srv://jasonsmith11:admin@cluster0.scyde.mongodb.net/",
+    "PORT": 5000,
+    "JWT_SECRET": "123"
+  }
+  

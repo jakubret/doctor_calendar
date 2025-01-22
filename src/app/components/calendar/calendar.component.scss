@@ -1,0 +1,110 @@
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  thead th {
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  tbody td {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .slot-cell {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .slot-cell.booked {
+    background-color: #ffcccc;
+    pointer-events: none;
+  }
+  
+  .slot-cell:not(.booked):hover {
+    background-color: #ccffcc;
+  }
+  
+  .week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  .slot-cell.past {
+    background-color: #f0f0f0;
+    color: gray;
+    pointer-events: none; /* Wyłącza możliwość kliknięcia */
+  }
+  .available-slot {
+    background-color: #a8f0a8;
+    cursor: pointer;
+  }
+  
+  .booked-slot {
+    background-color: #f0a8a8;
+    cursor: not-allowed;
+  }
+  .calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .calendar-table th,
+  .calendar-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .calendar-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .calendar-table td {
+    vertical-align: middle;
+  }
+  
+  .week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+  }
+  
+  button {
+    background-color: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
