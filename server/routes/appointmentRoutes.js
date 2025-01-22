@@ -11,7 +11,7 @@ const {
 
 //router.get('/slots/:doctorId', checkJwt, getDoctorSlots); // Nowa trasa dla slotów
 router.get('/:id', checkJwt, getAppointment);
-router.post('/', checkJwt, createAppointment);
+router.post('/book', checkJwt, createAppointment);
 router.put('/:id', checkJwt, updateAppointment);
 router.delete('/:id', checkJwt, deleteAppointment);
 

@@ -41,7 +41,7 @@ export class CalendarComponent implements OnInit {
   ngOnInit() {
     this.role = this.authService.getUserRole();
     console.log('User Role:', this.role);
-  
+    this.generateWeeklySlots();
     if (this.role === 'doctor') {
       const roleId = this.authService.getRoleId();
       this.availabilityForm.doctorId = roleId;
