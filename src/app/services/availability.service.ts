@@ -12,7 +12,12 @@ export class AvailabilityService {
   constructor(private http: HttpClient) {}
 
   getAvailability(doctorId: number): Observable<Availability[]> {
-    return this.http.get<Availability[]>(`${this.apiUrl}/${doctorId}`);
+    const token = localStorage.getItem('token');
+
+    return this.http.get<Availability[]>(`${this.apiUrl}/${doctorId}`,
+      {      headers: { Authorization: `Bearer ${token}` },
+    }
+    );
   }
 
   createAvailability(availability: Availability): Observable<Availability> {
@@ -46,10 +51,14 @@ export class AvailabilityService {
   
   getAllDoctorSlots(): Observable<any[]> {
     const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authorization token is missing.');
+    }
     return this.http.get<any[]>(`${this.api1}/all-slots`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   }
+  
   
 }
 

@@ -57,59 +57,119 @@ export class CalendarComponent implements OnInit {
   }
   
   
-  generateWeeklySlots() {
-    const startWeek = startOfWeek(this.viewDate, { weekStartsOn: 1 });
+//  generateWeeklySlots() {
+//    const startWeek = startOfWeek(this.viewDate, { weekStartsOn: 1 });
+//  
+//    // Define the explicit type for slots
+//    const slots: {
+//      date: Date;
+//      slots: { time: Date; booked: boolean; doctorId: string | null; patientName: string | null }[];
+//    }[] = [];
+//  
+//    for (let day = 0; day < 7; day++) {
+//      const currentDay = addDays(startWeek, day);
+//  
+//      // Explicitly define the type for daySlots
+//      const daySlots: { time: Date; booked: boolean; doctorId: string | null; patientName: string | null }[] = [];
+//      let time = startOfDay(currentDay);
+//  
+//      // Generate slots in intervals of `timeSlotInterval` minutes
+//      while (time.getHours() < this.endHour) {
+//        daySlots.push({
+//          time: new Date(time),
+//          booked: false,
+//          doctorId: null,
+//          patientName: null,
+//        });
+//        time = addMinutes(time, this.timeSlotInterval);
+//      }
+//  
+//      slots.push({ date: currentDay, slots: daySlots });
+//    }
+//  
+//    // Fetch all doctor slots and update the weekly slots
+//    this.availabilityService.getAllDoctorSlots().subscribe((availability: any[]) => {
+//      availability.forEach((avail) => {
+//        slots.forEach((day) => {
+//          if (new Date(avail.date).toDateString() === new Date(day.date).toDateString()) {
+//            day.slots.forEach((slot) => {
+//              const isAvailable = avail.slots.some(
+//                (aSlot: any) => new Date(aSlot.time).getTime() === slot.time.getTime()
+//              );
+//              if (isAvailable) {
+//                slot.booked = false;
+//                slot.doctorId = avail.doctorId;
+//              }
+//            });
+//          }
+//        });
+//      });
+//  
+//      this.weeklySlots = slots; // Update the component's weeklySlots property
+//    });
+//  }
   
-    // Define the explicit type for slots
-    const slots: {
-      date: Date;
-      slots: { time: Date; booked: boolean; doctorId: string | null; patientName: string | null }[];
-    }[] = [];
-  
-    for (let day = 0; day < 7; day++) {
-      const currentDay = addDays(startWeek, day);
-  
-      // Explicitly define the type for daySlots
-      const daySlots: { time: Date; booked: boolean; doctorId: string | null; patientName: string | null }[] = [];
-      let time = startOfDay(currentDay);
-  
-      // Generate slots in intervals of `timeSlotInterval` minutes
-      while (time.getHours() < this.endHour) {
-        daySlots.push({
-          time: new Date(time),
-          booked: false,
-          doctorId: null,
-          patientName: null,
-        });
-        time = addMinutes(time, this.timeSlotInterval);
-      }
-  
-      slots.push({ date: currentDay, slots: daySlots });
-    }
-  
-    // Fetch all doctor slots and update the weekly slots
-    this.availabilityService.getAllDoctorSlots().subscribe((availability: any[]) => {
-      availability.forEach((avail) => {
-        slots.forEach((day) => {
-          if (new Date(avail.date).toDateString() === new Date(day.date).toDateString()) {
-            day.slots.forEach((slot) => {
-              const isAvailable = avail.slots.some(
-                (aSlot: any) => new Date(aSlot.time).getTime() === slot.time.getTime()
-              );
-              if (isAvailable) {
-                slot.booked = false;
-                slot.doctorId = avail.doctorId;
-              }
-            });
-          }
-        });
-      });
-  
-      this.weeklySlots = slots; // Update the component's weeklySlots property
-    });
+generateWeeklySlots() {
+  interface Slot {
+    time: Date;
+    booked: boolean;
+    available: boolean;
+    doctorId: number | null;
   }
   
+  interface DaySlots {
+    date: Date;
+    slots: Slot[];
+  }
   
+  const startWeek = startOfWeek(this.viewDate, { weekStartsOn: 1 });
+
+  // Initialize weekly slots with default structure
+  this.weeklySlots = [] as DaySlots[]; // Explicitly define the type of weeklySlots
+
+  for (let day = 0; day < 7; day++) {
+    const currentDate = addDays(startWeek, day);
+    const daySlots: Slot[] = []; // Explicitly define type for daySlots
+
+    let time = new Date(currentDate.setHours(this.startHour, 0, 0, 0));
+    while (time.getHours() < this.endHour) {
+      daySlots.push({
+        time: new Date(time),
+        booked: false,
+        available: false,
+        doctorId: null,
+      });
+      time = new Date(time.getTime() + this.timeSlotInterval * 60000); // Increment by 30 minutes
+    }
+
+    this.weeklySlots.push({
+      date: currentDate,
+      slots: daySlots,
+    });
+  }
+
+  // Fetch availability and update weekly slots
+  this.availabilityService.getAllDoctorSlots().subscribe((availability: any[]) => {
+    availability.forEach((avail) => {
+      const availDate = new Date(avail.date).toDateString();
+      this.weeklySlots.forEach((day) => {
+        if (new Date(day.date).toDateString() === availDate) {
+          day.slots.forEach((slot: Slot) => {
+            const matchingSlot = avail.slots.find(
+              (aSlot: any) => new Date(aSlot.time).getTime() === slot.time.getTime()
+            );
+            if (matchingSlot) {
+              slot.available = true;
+              slot.doctorId = avail.doctorId;
+            }
+          });
+        }
+      });
+    });
+  });
+}
+
+
   
 
 //  generateWeeklySlots() {
@@ -229,8 +289,12 @@ export class CalendarComponent implements OnInit {
       this.bookSlot(slot);
     }
   }
-  getSlot(day: any, slotTime: Date): any {
-    return day.slots.find((s: any) => s.time.getTime() === slotTime.getTime()) || null;
+  getSlot(day: any, timeSlot: Date): any {
+    if (!day || !day.slots) {
+      return null; // Return null if day or slots are undefined
+    }
+    return day.slots.find((s: any) => s.time.getTime() === timeSlot.getTime()) || null;
   }
+  
   
 }

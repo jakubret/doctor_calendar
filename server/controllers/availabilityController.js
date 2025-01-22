@@ -136,36 +136,52 @@ exports.getDoctorSlots = async (req, res) => {
 
 exports.getAllDoctorSlots = async (req, res) => {
   try {
-    // Pobranie wszystkich dostępności
     const availability = await Availability.find();
-
-    // Pobierz istniejące wizyty
     const appointments = await Appointment.find();
 
-    const slots = availability.map((day) => {
-      const daySlots = day.daysOfWeek.map((dayOfWeek) => {
-        const slots = [];
-        let time = new Date(`${day.startDate}T${day.startTime}`);
-        const endTime = new Date(`${day.startDate}T${day.endTime}`);
+    const slots = [];
+
+    availability.forEach((avail) => {
+      const startDate = new Date(avail.startDate);
+      const endDate = new Date(avail.endDate);
+
+      // Generowanie slotów dla każdego dnia w zakresie dat
+      for (
+        let currentDate = startDate;
+        currentDate <= endDate;
+        currentDate.setDate(currentDate.getDate() + 1)
+      ) {
+        const daySlots = [];
+        let time = new Date(
+          `${currentDate.toISOString().split('T')[0]}T${avail.startTime}`
+        );
+        const endTime = new Date(
+          `${currentDate.toISOString().split('T')[0]}T${avail.endTime}`
+        );
 
         while (time < endTime) {
           const isBooked = appointments.some(
             (appointment) =>
-              appointment.startDateTime.getTime() === time.getTime() &&
-              appointment.doctorId === day.doctorId
+              new Date(appointment.startDateTime).getTime() ===
+                time.getTime() &&
+              appointment.doctorId === avail.doctorId
           );
 
-          slots.push({
+          daySlots.push({
             time: new Date(time),
             booked: isBooked,
-            doctorId: day.doctorId,
+            doctorId: avail.doctorId,
           });
 
-          time = new Date(time.getTime() + day.timeSlotInterval * 60000);
+          time.setMinutes(time.getMinutes() + 30); // Interwały czasowe co 30 minut
         }
-        return { dayOfWeek, slots };
-      });
-      return { date: day.startDate, slots: daySlots, doctorId: day.doctorId };
+
+        slots.push({
+          date: currentDate.toISOString().split('T')[0],
+          slots: daySlots,
+          doctorId: avail.doctorId,
+        });
+      }
     });
 
     res.json(slots);
@@ -173,4 +189,5 @@ exports.getAllDoctorSlots = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 

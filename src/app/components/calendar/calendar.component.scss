@@ -107,4 +107,21 @@
   button:hover {
     background-color: #0056b3;
   }
+  .booked {
+    background-color: red;
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+  }
+  
+  .available {
+    background-color: lightgreen;
+    color: black;
+    padding: 5px;
+    border-radius: 4px;
+  }
+  
+  .not-available {
+    color: gray;
+  }
   

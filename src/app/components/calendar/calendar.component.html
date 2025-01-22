@@ -1,9 +1,9 @@
 <h1 style="text-align: center;">Doctor's Weekly Calendar</h1>
 
-<div class="week-navigation">
-  <button (click)="navigateWeeks(-1)">Previous Week</button>
-  <h2>{{ viewDate | date: 'MMMM yyyy' }}</h2>
-  <button (click)="navigateWeeks(1)">Next Week</button>
+<div class="week-navigation" style="text-align: center; margin-bottom: 20px;">
+  <button (click)="navigateWeeks(-1)" style="padding: 8px 16px; margin-right: 10px;">Previous Week</button>
+  <h2 style="display: inline-block; margin: 0;">{{ viewDate | date: 'MMMM yyyy' }}</h2>
+  <button (click)="navigateWeeks(1)" style="padding: 8px 16px; margin-left: 10px;">Next Week</button>
 </div>
 
 <table class="calendar-table" style="width: 100%; border-collapse: collapse;">
@@ -26,7 +26,7 @@
             *ngIf="getSlot(day, timeSlot).booked"
             style="color: white; background-color: red; padding: 4px 8px; border-radius: 4px;"
           >
-            Booked ({{ getSlot(day, timeSlot).patientName }})
+            Booked ({{ getSlot(day, timeSlot)?.patientName || 'Anonymous' }})
           </span>
           <button
             *ngIf="!getSlot(day, timeSlot).booked && role === 'patient'"
@@ -37,7 +37,7 @@
           </button>
           <span
             *ngIf="!getSlot(day, timeSlot).booked && role === 'doctor'"
-            style="color: green;"
+            style="color: green; font-weight: bold;"
           >
             Available
           </span>
@@ -52,19 +52,22 @@
 
 <form (ngSubmit)="submitAvailability()" *ngIf="role === 'doctor'" style="margin-top: 20px;">
   <div style="display: flex; gap: 10px; justify-content: center;">
-    <label>Start Date:</label>
-    <input type="date" [(ngModel)]="availabilityForm.startDate" name="startDate" required />
+    <label for="startDate">Start Date:</label>
+    <input id="startDate" type="date" [(ngModel)]="availabilityForm.startDate" name="startDate" required />
 
-    <label>End Date:</label>
-    <input type="date" [(ngModel)]="availabilityForm.endDate" name="endDate" required />
+    <label for="endDate">End Date:</label>
+    <input id="endDate" type="date" [(ngModel)]="availabilityForm.endDate" name="endDate" required />
 
-    <label>Start Time:</label>
-    <input type="time" [(ngModel)]="availabilityForm.startTime" name="startTime" required />
+    <label for="startTime">Start Time:</label>
+    <input id="startTime" type="time" [(ngModel)]="availabilityForm.startTime" name="startTime" required />
 
-    <label>End Time:</label>
-    <input type="time" [(ngModel)]="availabilityForm.endTime" name="endTime" required />
+    <label for="endTime">End Time:</label>
+    <input id="endTime" type="time" [(ngModel)]="availabilityForm.endTime" name="endTime" required />
 
-    <button type="submit" style="background-color: blue; color: white; padding: 5px 10px; border: none; cursor: pointer;">
+    <button
+      type="submit"
+      style="background-color: blue; color: white; padding: 5px 10px; border: none; cursor: pointer;"
+    >
       Submit
     </button>
   </div>
