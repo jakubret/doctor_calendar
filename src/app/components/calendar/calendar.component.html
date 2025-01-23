@@ -7,17 +7,24 @@
   <button (click)="logout()" style="padding: 8px 16px; margin-left: 10px; background-color: #ff4d4f; color: white;">Logout</button>
 </div>
 
-
+  
 
 <table class="calendar-table" style="width: 100%; border-collapse: collapse;">
   <thead>
     <tr>
+      
       <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Time</th>
-      <th *ngFor="let day of weeklySlots" style="border: 1px solid #ddd; padding: 8px; text-align: center;">
-        {{ day.date | date: 'EEE, MMM d' }}
-        <br />
-        <span style="font-size: 12px; color: gray;">({{ day.date }})</span>
-      </th>
+<th
+  *ngFor="let day of weeklySlots"
+  [ngClass]="{ 'today-column': isToday(day.date), 'normal-column': !isToday(day.date) }"
+  style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+  {{ day.date | date: 'EEE, MMM d' }}
+  {{isToday(day.date) ? '(Today)' : ''}}
+  <br />
+  <span style="font-size: 12px; color: gray;">({{ day.date }})</span>
+</th>
+
+      
     </tr>
   </thead>
   <tbody>
@@ -28,23 +35,22 @@
         <span style="font-size: 12px; color: gray;">({{ timeSlot.toISOString() }})</span>
       </td>
       <td *ngFor="let day of weeklySlots" style="border: 1px solid #ddd; padding: 8px; text-align: center;">
-        <ng-container *ngIf="getSlot(day, timeSlot) as slot">
-          <span *ngIf="slot.booked" style="color: white; background-color: red; padding: 4px 8px; border-radius: 4px;">
-            Booked
-          </span>
-          <button *ngIf="!slot.booked && role === 'patient'" (click)="openBookingForm(slot)"
-                  style="background-color: lightgreen; border: none; padding: 4px 8px; cursor: pointer;">
+        <ng-container *ngIf="isSlotAvailable(day, timeSlot) as availableSlot">
+          <button *ngIf="!availableSlot.booked && role === 'patient'" (click)="openBookingForm(availableSlot)" style="background-color: lightgreen; border: none; padding: 4px 8px; cursor: pointer;">
             Book
           </button>
+          <span *ngIf="availableSlot.booked" style="color: white; background-color: red; padding: 4px 8px; border-radius: 4px;">
+            Booked
+          </span>
         </ng-container>
-        <ng-container *ngIf="!getSlot(day, timeSlot)">
-          <span style="color: gray;">Unavailable</span>
-        </ng-container>
+        <span *ngIf="!isSlotAvailable(day, timeSlot)" style="color: gray;">Unavailable</span>
       </td>
+      
     </tr>
-    
   </tbody>
 </table>
+
+
 
 
 
