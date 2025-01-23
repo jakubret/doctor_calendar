@@ -12,6 +12,8 @@
       <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Time</th>
       <th *ngFor="let day of weeklySlots" style="border: 1px solid #ddd; padding: 8px; text-align: center;">
         {{ day.date | date: 'EEE, MMM d' }}
+        <br />
+        <span style="font-size: 12px; color: gray;">({{ day.date }})</span>
       </th>
     </tr>
   </thead>
@@ -19,39 +21,31 @@
     <tr *ngFor="let timeSlot of getTimeSlots()">
       <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
         {{ timeSlot | date: 'h:mm a' }}
+        <br />
+        <span style="font-size: 12px; color: gray;">({{ timeSlot.toISOString() }})</span>
       </td>
       <td *ngFor="let day of weeklySlots" style="border: 1px solid #ddd; padding: 8px; text-align: center;">
-        <ng-container *ngIf="getSlot(day, timeSlot)">
-          <span *ngIf="getSlot(day, timeSlot).booked" style="color: white; background-color: red; padding: 4px 8px; border-radius: 4px;">
-            Booked ({{ getSlot(day, timeSlot)?.patientName || 'Anonymous' }})
+        <ng-container *ngIf="getSlot(day, timeSlot) as slot">
+          <span *ngIf="slot.booked" style="color: white; background-color: red; padding: 4px 8px; border-radius: 4px;">
+            Booked
           </span>
-          <button
-  *ngIf="!getSlot(day, timeSlot).booked && role === 'patient'"
-  (click)="openBookingForm(getSlot(day, timeSlot))"
-  style="background-color: lightgreen; border: none; padding: 4px 8px; cursor: pointer;"
->
-  Available
-</button>
-
+          <button *ngIf="!slot.booked && role === 'patient'" (click)="openBookingForm(slot)"
+                  style="background-color: lightgreen; border: none; padding: 4px 8px; cursor: pointer;">
+            Book
+          </button>
+        </ng-container>
+        <ng-container *ngIf="!getSlot(day, timeSlot)">
+          <span style="color: gray;">Unavailable</span>
         </ng-container>
       </td>
     </tr>
+    
   </tbody>
 </table>
 
-<div *ngIf="selectedSlot">
-  <app-booking
-    [slot]="selectedSlot"
-    (confirm)="confirmBooking($event)"
-    (cancel)="cancelBooking()"
-  ></app-booking>
-</div>
-
-
 
 
 <div *ngIf="selectedSlot">
-  <p>Selected Slot: {{ selectedSlot.time }}</p>
   <app-booking
     [slot]="selectedSlot"
     (confirm)="confirmBooking($event)"
@@ -81,6 +75,3 @@
     </button>
   </div>
 </form>
-<!-- Other Calendar Code -->
-
-

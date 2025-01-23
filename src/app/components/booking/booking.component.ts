@@ -16,12 +16,15 @@ export class BookingComponent implements OnInit {
   constructor(private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit(): void {
-    const slotData = this.route.snapshot.queryParams['slot'];
-    this.slot = slotData ? JSON.parse(slotData) : {};
+    this.route.queryParams.subscribe((params) => {
+      const slotData = params['slot'];
+      if (slotData) {
+        this.slot = JSON.parse(slotData); // Parsujemy dane slotu z queryParams
+      }
+    });
   }
 
   confirmBooking() {
-    // Wykonanie akcji potwierdzającej rezerwację
     console.log('Rezerwacja zatwierdzona:', {
       slot: this.slot,
       patientName: this.patientName,

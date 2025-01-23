@@ -1,4 +1,4 @@
-<div class="booking-form">
+<div class="booking-form" *ngIf="slot && slot.time">
     <h2>Booking Slot: {{ slot.time | date: 'fullDate' }} at {{ slot.time | date: 'shortTime' }}</h2>
     <form (ngSubmit)="confirmBooking()">
       <label for="patientName">Patient Name:</label>
@@ -32,5 +32,11 @@
         Cancel
       </button>
     </form>
+  </div>
+  
+  <!-- Jeśli dane slotu są puste -->
+  <div *ngIf="!slot || !slot.time">
+    <p>No slot data available. Please return to the calendar and select a slot again.</p>
+    <button (click)="cancelBooking()">Back to Calendar</button>
   </div>
   

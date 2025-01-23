@@ -9,6 +9,8 @@ import { FormsModule } from '@angular/forms';
 import { BookingComponent } from '../booking/booking.component';
 import { Appointment } from '../../models/appointment.model';
 import { Router } from '@angular/router';
+import { ChangeDetectorRef } from '@angular/core';
+
 @Component({
   selector: 'app-calendar',
   templateUrl: './calendar.component.html',
@@ -38,7 +40,8 @@ export class CalendarComponent implements OnInit {
     private authService: AuthService,
     private availabilityService: AvailabilityService,
     private appointmentService: AppointmentService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -113,65 +116,47 @@ export class CalendarComponent implements OnInit {
 //  }
   
 generateWeeklySlots() {
-  interface Slot {
-    time: Date;
-    booked: boolean;
-    available: boolean;
-    doctorId: number | null;
-    patientName?: string;
-  }
-  
-  interface DaySlots {
-    date: Date;
-    slots: Slot[];
-  }
-  
+  // Set the start of the week based on the current view date
   const startWeek = startOfWeek(this.viewDate, { weekStartsOn: 1 });
+  const weeklySlots: any[] = [];
 
-  // Initialize weekly slots with default structure
-  this.weeklySlots = [] as DaySlots[]; // Explicitly define the type of weeklySlots
-
+  // Initialize weekly structure with empty slots for each day of the week
   for (let day = 0; day < 7; day++) {
     const currentDate = addDays(startWeek, day);
-    const daySlots: Slot[] = []; // Explicitly define type for daySlots
-
-    let time = new Date(currentDate.setHours(this.startHour, 0, 0, 0));
-    while (time.getHours() < this.endHour) {
-      daySlots.push({
-        time: new Date(time),
-        booked: false,
-        available: false,
-        doctorId: null,
-      });
-      time = new Date(time.getTime() + this.timeSlotInterval * 60000); // Increment by 30 minutes
-    }
-
-    this.weeklySlots.push({
-      date: currentDate,
-      slots: daySlots,
+    weeklySlots.push({
+      date: currentDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      slots: [],
     });
   }
 
-  // Fetch availability and update weekly slots
+  // Fetch available slots from the backend
   this.availabilityService.getAllDoctorSlots().subscribe((availability: any[]) => {
+    // Process each day's availability
     availability.forEach((avail) => {
-      const availDate = new Date(avail.date).toDateString();
-      this.weeklySlots.forEach((day) => {
-        if (new Date(day.date).toDateString() === availDate) {
-          day.slots.forEach((slot: Slot) => {
-            const matchingSlot = avail.slots.find(
-              (aSlot: any) => new Date(aSlot.time).getTime() === slot.time.getTime()
-            );
-            if (matchingSlot) {
-              slot.available = true;
-              slot.doctorId = avail.doctorId;
-            }
+      // Find the corresponding day in the weekly structure
+      const day = weeklySlots.find(daySlot => daySlot.date === avail.date);
+
+      if (day) {
+        // Map each slot into the day structure
+        avail.slots.forEach((slot: any) => {
+          day.slots.push({
+            time: new Date(slot.time).toISOString(), // Convert time to ISO string for consistency
+            booked: slot.booked,
+            doctorId: slot.doctorId,
+            available: !slot.booked,
           });
-        }
-      });
+        });
+      }
     });
+
+    // Update component state with the new weekly slots
+    this.weeklySlots = weeklySlots;
+    this.cdr.detectChanges(); // Trigger change detection to update the view
+    console.log('Weekly slots updated:', this.weeklySlots); // Optional: Debugging output
   });
 }
+
+
 
 
   
@@ -199,29 +184,65 @@ generateWeeklySlots() {
 //    }
 //  }
 
-  loadDoctorAvailability() {
-    const doctorId = this.authService.getUserId();
-    if (doctorId) {
-      this.availabilityService.getAvailability(doctorId).subscribe((availabilities) => {
-        this.weeklySlots = availabilities;
-      });
-    }
+loadDoctorAvailability() {
+  const doctorId = this.authService.getUserId();
+  if (doctorId) {
+    this.availabilityService.getAvailability(doctorId).subscribe((availabilities) => {
+      this.weeklySlots = this.generateWeeklySlotsFromAvailability(availabilities);
+    });
   }
+}
 
-  bookSlot(slot: any) {
-    if (!slot.past && !slot.booked) {
-      const patientId = this.authService.getUserId();
-      const patientName = prompt('Enter Patient Name:');
-      if (patientId && patientName) {
-        this.appointmentService
-          .bookAppointment({ ...slot, patientId, patientName })
-          .subscribe(() => {
-            slot.booked = true;
-            slot.patientName = patientName;
-          });
-      }
+generateWeeklySlotsFromAvailability(availabilities: any[]): any[] {
+  const startWeek = startOfWeek(this.viewDate, { weekStartsOn: 1 });
+  const weeklySlots: any[] = [];
+
+  for (let day = 0; day < 7; day++) {
+    const currentDate = addDays(startWeek, day);
+    const slotsForDay = availabilities.find(
+      (availability) => new Date(availability.date).toDateString() === currentDate.toDateString()
+    );
+
+    const daySlots = [];
+    let time = new Date(currentDate.setHours(this.startHour, 0, 0, 0));
+    while (time.getHours() < this.endHour) {
+      const matchingSlot = slotsForDay?.slots.find(
+        (slot: any) => new Date(slot.time).getTime() === time.getTime()
+      );
+
+      daySlots.push({
+        time: new Date(time),
+        booked: matchingSlot ? matchingSlot.booked : false,
+        doctorId: matchingSlot ? matchingSlot.doctorId : null,
+        available: !!matchingSlot,
+      });
+
+      time = new Date(time.getTime() + this.timeSlotInterval * 60000);
+    }
+
+    weeklySlots.push({ date: currentDate, slots: daySlots });
+  }
+  console.log('Weekly Slots:', this.weeklySlots);
+
+  return weeklySlots;
+}
+
+
+bookSlot(slot: any) {
+  if (!slot.booked) {
+    const patientId = this.authService.getUserId();
+    const patientName = prompt('Enter Patient Name:');
+    if (patientId && patientName) {
+      this.appointmentService
+        .bookAppointment({ ...slot, patientId, patientName })
+        .subscribe(() => {
+          alert('Appointment successfully booked!');
+          slot.booked = true;
+          this.cdr.detectChanges(); // Refresh the calendar
+        });
     }
   }
+}
 
   submitAvailability() {
     const doctorId = this.authService.getUserId();
@@ -230,20 +251,24 @@ generateWeeklySlots() {
       alert('You must be logged in as a doctor to submit availability.');
       return;
     }
-
+  
     const role = this.authService.getUserRole();
     if (role !== 'doctor') {
       console.error('Error: Only doctors can submit availability.');
       alert('Only doctors can submit availability.');
       return;
     }
-
+  
     const availability = { ...this.availabilityForm, doctorId };
-    console.log('Submitting availability:', availability); // Loguj dane do wysłania
+    console.log('Submitting availability:', availability);
+  
     this.availabilityService.createAvailability(availability).subscribe(
       () => {
         alert('Availability successfully created.');
-        this.generateWeeklySlots();
+        this.generateWeeklySlots(); // Odśwież kalendarz
+        this.cdr.detectChanges();
+
+        this.loadDoctorAvailability(); // Odśwież dane slotów po zapisaniu dostępności
       },
       (error) => {
         console.error('Error creating availability:', error);
@@ -252,10 +277,13 @@ generateWeeklySlots() {
     );
   }
   
+  
 
   navigateWeeks(direction: number) {
     this.viewDate = addDays(this.viewDate, direction * 7);
     this.generateWeeklySlots();
+    this.cdr.detectChanges();
+
   }
 
   getSlotClass(day: any, slotTime: Date): any {
@@ -266,16 +294,19 @@ generateWeeklySlots() {
     };
   }
   getTimeSlots(): Date[] {
-    const slots: Date[] = [];
-    let time = new Date(this.viewDate.setHours(this.startHour, 0, 0, 0)); // start at `startHour`
-  
-    while (time.getHours() < this.endHour) {
-      slots.push(new Date(time)); // Add the time to the slots array
-      time = new Date(time.getTime() + this.timeSlotInterval * 60000); // Increment by `timeSlotInterval` minutes
-    }
-  
-    return slots;
+  const slots: Date[] = [];
+  let time = new Date(this.viewDate.setHours(this.startHour, 0, 0, 0)); // Start at `startHour`
+
+  while (time.getHours() < this.endHour) {
+    slots.push(new Date(time)); // Push time w ISO formacie
+    time = new Date(time.getTime() + this.timeSlotInterval * 60000); // Increment by `timeSlotInterval`
   }
+
+  return slots;
+}
+
+  
+  
   
 
   getSlotPatientName(day: any, slotTime: Date): string | null {
@@ -283,30 +314,54 @@ generateWeeklySlots() {
     return slot?.patientName || null;
   }
   
-  canBookSlot(day: any, slotTime: Date): boolean {
-    const slot = day.slots.find((s: any) => s.time.getTime() === slotTime.getTime());
-    return slot && !slot.booked && !slot.past;
+  ccanBookSlot(day: any, timeSlot: Date): boolean {
+    const slot = this.getSlot(day, timeSlot);
+    return slot && slot.available && !slot.booked;
   }
-  bookSlotIfAvailable(day: any, slotTime: Date) {
-    const slot = day.slots.find((s: any) => s.time.getTime() === slotTime.getTime());
-    if (this.canBookSlot(day, slotTime)) {
+  
+  bookSlotIfAvailable(day: any, timeSlot: Date) {
+    const slot = this.getSlot(day, timeSlot);
+    if (slot && slot.available && !slot.booked) {
       this.bookSlot(slot);
     }
   }
+ 
+  
+  
+  
+  
   getSlot(day: any, timeSlot: Date): any {
-   
-
     if (!day || !day.slots) {
-      return null; // Return null if day or slots are undefined
-    }
-    return day.slots.find((s: any) => new Date(s.time).getTime() === timeSlot.getTime()) || null;
+      console.warn('Day or slots undefined:', { day, timeSlot });
+      return null;
     }
   
+    // Compare slot times in milliseconds to avoid ISO formatting issues
+    return day.slots.find(
+      (s: any) => new Date(s.time).getTime() === timeSlot.getTime()
+    ) || null;
+  }
+  
+  
+  
+  isSlotAvailable(day: any, timeSlot: Date): any {
+    if (!day.slots) return null; // Brak slotów
+    return day.slots.find((slot: any) => new Date(slot.time).toISOString() === timeSlot.toISOString()) || null;
+  }
+  
+  
+  
+  
+  
+  
     openBookingForm(slot: any): void {
-      console.log('Opening booking form for slot:', slot); // Debug log
-      this.router.navigate(['/booking'], {
-        queryParams: { slot: JSON.stringify(slot) },
-      });
+      if (slot && !slot.booked) {
+        this.router.navigate(['/booking'], {
+          queryParams: { slot: JSON.stringify(slot) }, // Przekazanie slotu jako queryParam
+        });
+      } else {
+        alert('This slot is not available for booking.');
+      }
     }
   
     confirmBooking(event: any): void {
@@ -327,6 +382,8 @@ generateWeeklySlots() {
         this.selectedSlot.booked = true;
         this.selectedSlot = null;
         this.generateWeeklySlots();
+        this.cdr.detectChanges();
+
       });
     }
     
