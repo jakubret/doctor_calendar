@@ -1,0 +1,33 @@
+<div class="booking-form" *ngIf="slot && slot.time">
+    <h2>Booking Slot: {{ slot.time | date: 'fullDate' }} at {{ slot.time | date: 'shortTime' }}</h2>
+    <form (ngSubmit)="confirmBooking()">
+      <div>
+        <label for="patientName">Patient Name:</label>
+        <input id="patientName" [(ngModel)]="patientName" name="patientName" type="text" required />
+      </div>
+      <div>
+        <label for="patientGender">Gender:</label>
+        <select id="patientGender" [(ngModel)]="patientGender" name="patientGender">
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+      <div>
+        <label for="patientAge">Age:</label>
+        <input id="patientAge" [(ngModel)]="patientAge" name="patientAge" type="number" />
+      </div>
+      <div>
+        <label for="patientNotes">Notes:</label>
+        <textarea id="patientNotes" [(ngModel)]="patientNotes" name="patientNotes"></textarea>
+      </div>
+      <button type="submit" class="confirm-button">Confirm</button>
+      <button type="button" class="cancel-button" (click)="cancelBooking()">Cancel</button>
+    </form>
+  </div>
+  
+  <!-- Display a message if no slot data is available -->
+  <div *ngIf="!slot.time">
+    <p>No slot data available. Please return to the calendar and select a slot again.</p>
+    <button (click)="cancelBooking()">Back to Calendar</button>
+  </div>
+  

@@ -58,10 +58,11 @@ export class AuthService {
   /**
    * Wylogowanie użytkownika
    */
-  logout(): void {
-    localStorage.removeItem('currentUser');
-    this.currentUserSubject.next(null);
+  logout() {
+    localStorage.removeItem('token');  // Assuming you store your token in localStorage
+    // Add any other cleanup logic here
   }
+  
 
   /**
    * Pobieranie roli zalogowanego użytkownika

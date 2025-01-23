@@ -183,6 +183,10 @@ generateWeeklySlots() {
 //      this.weeklySlots.push({ date: currentDay, slots });
 //    }
 //  }
+logout() {
+  this.authService.logout();  // Call the logout method from AuthService
+  this.router.navigate(['/login']);  // Redirect to the login page
+}
 
 loadDoctorAvailability() {
   const doctorId = this.authService.getUserId();
@@ -354,15 +358,14 @@ bookSlot(slot: any) {
   
   
   
-    openBookingForm(slot: any): void {
-      if (slot && !slot.booked) {
-        this.router.navigate(['/booking'], {
-          queryParams: { slot: JSON.stringify(slot) }, // Przekazanie slotu jako queryParam
-        });
-      } else {
-        alert('This slot is not available for booking.');
-      }
+  openBookingForm(slot: any): void {
+    if (slot && !slot.booked) {
+      // Navigate to the booking component with slot data
+      this.router.navigate(['/book'], { queryParams: { slot: JSON.stringify(slot) } });
+    } else {
+      alert('This slot is not available for booking.');
     }
+  }
   
     confirmBooking(event: any): void {
       const bookingDetails: Appointment = {

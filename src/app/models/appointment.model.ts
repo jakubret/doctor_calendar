@@ -6,7 +6,7 @@ export interface Appointment {
     type: string;
     patientName: string;
     patientGender: string;
-    patientAge: number;
+    patientAge: number | null;
     patientNotes: string;
   }
   

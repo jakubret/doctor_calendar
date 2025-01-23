@@ -32,5 +32,13 @@ export class LoginComponent {
       (error) => console.error('Login failed:', error)
     );
   }
+  logout() {
+    this.authService.logout();  // Clear user token and other session data
+    this.router.navigate(['/login']);  // Navigate to login page
+  }
+  navigateToRegister() {
+    this.router.navigate(['/register']); // Ensure '/register' is the correct path as defined in your routing module
+  }
   
+
 }

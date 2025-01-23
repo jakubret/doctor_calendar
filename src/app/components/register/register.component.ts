@@ -13,7 +13,7 @@ export class RegisterComponent {
   username = '';
   password = '';
   role = 'patient'; // Domyślna rola
-
+  
   constructor(private authService: AuthService, private router: Router) {}
 
   register() {

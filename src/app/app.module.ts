@@ -17,7 +17,7 @@ import { RouterModule } from '@angular/router';
     ReactiveFormsModule,
     AppRoutingModule,
     RouterModule.forRoot([]), // Use routing for standalone components
-    // Do not include provideHttpClient() here
+
   ],
   providers: [
     provideHttpClient() // Correct placement for HttpClient configuration

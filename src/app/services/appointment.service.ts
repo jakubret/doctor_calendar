@@ -11,14 +11,20 @@ export class AppointmentService {
 
   constructor(private http: HttpClient) {}
 
-  bookAppointment(appointment: Appointment): Observable<Appointment> {
+  bookAppointment(appointmentData: Appointment): Observable<Appointment> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.post<Appointment>(`${this.apiUrl}/book`, appointment, { headers });
+    return this.http.post<Appointment>(`${this.apiUrl}/book`, appointmentData, { headers });
   }
 
   getAppointments(doctorId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/doctor/${doctorId}`);
   }
+
+getBookingsForPatient(): Observable<any[]> {
+  // This would typically make an HTTP GET request to your backend
+  return this.http.get<any[]>(`${this.apiUrl}/bookings`);
+}
+
 }
 
