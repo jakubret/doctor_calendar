@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Appointment } from '../models/appointment.model';
 
@@ -11,8 +11,10 @@ export class AppointmentService {
 
   constructor(private http: HttpClient) {}
 
-  bookAppointment(appointment: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/book`, appointment);
+  bookAppointment(appointment: Appointment): Observable<Appointment> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.post<Appointment>(`${this.apiUrl}/book`, appointment, { headers });
   }
 
   getAppointments(doctorId: number): Observable<any[]> {

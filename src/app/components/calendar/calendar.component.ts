@@ -6,13 +6,15 @@ import { AppointmentService } from '../../services/appointment.service';
 import { addDays, startOfWeek, addMinutes, startOfDay } from 'date-fns';
 import { from } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-
+import { BookingComponent } from '../booking/booking.component';
+import { Appointment } from '../../models/appointment.model';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-calendar',
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BookingComponent],
 })
 export class CalendarComponent implements OnInit {
   viewDate: Date = new Date(); // Aktualny tydzień
@@ -20,7 +22,7 @@ export class CalendarComponent implements OnInit {
   timeSlotInterval: number = 30; // Interwały czasowe w minutach
   startHour: number = 8; // Godzina początkowa
   endHour: number = 14; // Godzina końcowa
-
+  selectedSlot: any = null; // Selected slot for booking
   role: string = ''; // Rola użytkownika (doctor lub patient)
   availabilityForm: any = {
     doctorId: null,
@@ -35,7 +37,8 @@ export class CalendarComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private availabilityService: AvailabilityService,
-    private appointmentService: AppointmentService
+    private appointmentService: AppointmentService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -115,6 +118,7 @@ generateWeeklySlots() {
     booked: boolean;
     available: boolean;
     doctorId: number | null;
+    patientName?: string;
   }
   
   interface DaySlots {
@@ -290,11 +294,46 @@ generateWeeklySlots() {
     }
   }
   getSlot(day: any, timeSlot: Date): any {
+   
+
     if (!day || !day.slots) {
       return null; // Return null if day or slots are undefined
     }
-    return day.slots.find((s: any) => s.time.getTime() === timeSlot.getTime()) || null;
-  }
+    return day.slots.find((s: any) => new Date(s.time).getTime() === timeSlot.getTime()) || null;
+    }
   
+    openBookingForm(slot: any): void {
+      console.log('Opening booking form for slot:', slot); // Debug log
+      this.router.navigate(['/booking'], {
+        queryParams: { slot: JSON.stringify(slot) },
+      });
+    }
+  
+    confirmBooking(event: any): void {
+      const bookingDetails: Appointment = {
+        doctorId: event.slot.doctorId,
+        patientId: this.authService.getUserId() as number,
+        startDateTime: event.slot.time,
+        endDateTime: new Date(event.slot.time.getTime() + this.timeSlotInterval * 60000),
+        type: 'Consultation',
+        patientName: event.patientName,
+        patientGender: event.patientGender || 'Not Specified',
+        patientAge: event.patientAge || 0,
+        patientNotes: event.patientNotes || '',
+      };
+    
+      this.appointmentService.bookAppointment(bookingDetails).subscribe(() => {
+        alert('Appointment successfully booked!');
+        this.selectedSlot.booked = true;
+        this.selectedSlot = null;
+        this.generateWeeklySlots();
+      });
+    }
+    
+    cancelBooking(): void {
+      this.selectedSlot = null; // Ukryj formularz
+    }
+    
   
 }
+

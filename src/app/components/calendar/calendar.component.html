@@ -22,33 +22,42 @@
       </td>
       <td *ngFor="let day of weeklySlots" style="border: 1px solid #ddd; padding: 8px; text-align: center;">
         <ng-container *ngIf="getSlot(day, timeSlot)">
-          <span
-            *ngIf="getSlot(day, timeSlot).booked"
-            style="color: white; background-color: red; padding: 4px 8px; border-radius: 4px;"
-          >
+          <span *ngIf="getSlot(day, timeSlot).booked" style="color: white; background-color: red; padding: 4px 8px; border-radius: 4px;">
             Booked ({{ getSlot(day, timeSlot)?.patientName || 'Anonymous' }})
           </span>
           <button
-            *ngIf="!getSlot(day, timeSlot).booked && role === 'patient'"
-            (click)="bookSlot(getSlot(day, timeSlot))"
-            style="background-color: lightgreen; border: none; padding: 4px 8px; cursor: pointer;"
-          >
-            Available
-          </button>
-          <span
-            *ngIf="!getSlot(day, timeSlot).booked && role === 'doctor'"
-            style="color: green; font-weight: bold;"
-          >
-            Available
-          </span>
-        </ng-container>
-        <ng-container *ngIf="!getSlot(day, timeSlot)">
-          <span style="color: gray;">Not Available</span>
+  *ngIf="!getSlot(day, timeSlot).booked && role === 'patient'"
+  (click)="openBookingForm(getSlot(day, timeSlot))"
+  style="background-color: lightgreen; border: none; padding: 4px 8px; cursor: pointer;"
+>
+  Available
+</button>
+
         </ng-container>
       </td>
     </tr>
   </tbody>
 </table>
+
+<div *ngIf="selectedSlot">
+  <app-booking
+    [slot]="selectedSlot"
+    (confirm)="confirmBooking($event)"
+    (cancel)="cancelBooking()"
+  ></app-booking>
+</div>
+
+
+
+
+<div *ngIf="selectedSlot">
+  <p>Selected Slot: {{ selectedSlot.time }}</p>
+  <app-booking
+    [slot]="selectedSlot"
+    (confirm)="confirmBooking($event)"
+    (cancel)="cancelBooking()"
+  ></app-booking>
+</div>
 
 <form (ngSubmit)="submitAvailability()" *ngIf="role === 'doctor'" style="margin-top: 20px;">
   <div style="display: flex; gap: 10px; justify-content: center;">
@@ -72,3 +81,6 @@
     </button>
   </div>
 </form>
+<!-- Other Calendar Code -->
+
+

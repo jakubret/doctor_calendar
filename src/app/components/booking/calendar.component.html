@@ -1,0 +1,36 @@
+<div class="booking-form">
+    <h2>Booking Slot: {{ slot.time | date: 'fullDate' }} at {{ slot.time | date: 'shortTime' }}</h2>
+    <form (ngSubmit)="confirmBooking()">
+      <label for="patientName">Patient Name:</label>
+      <input
+        id="patientName"
+        [(ngModel)]="patientName"
+        name="patientName"
+        type="text"
+        required
+      />
+  
+      <label for="patientGender">Gender:</label>
+      <select id="patientGender" [(ngModel)]="patientGender" name="patientGender">
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+  
+      <label for="patientAge">Age:</label>
+      <input
+        id="patientAge"
+        [(ngModel)]="patientAge"
+        name="patientAge"
+        type="number"
+      />
+  
+      <label for="patientNotes">Notes:</label>
+      <textarea id="patientNotes" [(ngModel)]="patientNotes" name="patientNotes"></textarea>
+  
+      <button type="submit" class="confirm-button">Confirm</button>
+      <button type="button" class="cancel-button" (click)="cancelBooking()">
+        Cancel
+      </button>
+    </form>
+  </div>
+  
